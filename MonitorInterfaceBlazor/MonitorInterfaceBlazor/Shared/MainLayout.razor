@@ -1,0 +1,25 @@
+﻿@inherits LayoutComponentBase
+
+@*<div class="sidebar">
+    <NavMenu />
+</div>*@
+
+<Modal/>
+
+<div class="main">
+    <div class="top-row px-4">
+        <h3>Monitor Interface</h3>
+        <a href="http://blazor.net" target="_blank" class="ml-md-auto">About</a>
+    </div>
+
+    <div class="content px-4">
+        @Body
+    </div>
+    <footer>
+        <div class="content-footer">
+            <div>
+                <p class="footerText">&copy; @DateTime.Now.Year - HSN Monitor Interface</p>
+            </div>
+        </div>
+    </footer>
+</div>

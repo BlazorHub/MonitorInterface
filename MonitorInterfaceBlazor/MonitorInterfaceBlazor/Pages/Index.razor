@@ -1,0 +1,155 @@
+﻿@page "/"
+@inherits IndexBase
+@using MonitorInterfaceBlazor.Constants
+
+@if (results != null)
+{
+    <EditForm Model="@results" OnInvalidSubmit="@HandleValidSubmit">
+        <label class="indexLabel"><strong>Select a job to view its current parameters</strong></label>
+        <div class="currentJobList">
+
+            <InputSelect id="jobSelect" @bind-Value="jobSelected">
+                @foreach (var items in results)
+                {
+                    <option value="@items.JOB_NAME">@items.JOB_NAME</option>
+                }
+            </InputSelect>
+            <button type="button" class="btn btn-primary" @onclick="ShowServiceManager">Manage</button>
+            <button type="button" class="btn btn-primary" @onclick="AddNewJob">Add New Job</button>
+            <button type="button" class="btn btn-warning" @onclick="SaveChanges" disabled="@IsDisabled">Save</button>
+            <button type="button" class="btn btn-warning" @onclick="DeleteJob" disabled="@IsDisabled">Delete Job</button>
+            <button type="button" class="btn btn-warning" @onclick="GetData">Refresh</button>
+            <button type="button" class="btn btn-danger" @onclick="Override">Override</button>
+        </div>
+        <label class="indexLabel"><strong>Run Time Parameters</strong></label>
+        <div class="runTimeParametersForm">
+            <div class="runtimeParams">
+                @foreach (var items in results.Where(i => i.JOB_NAME == jobSelected))
+                {
+                    <p class="runTimeFields"><strong>Months: </strong>@items.RUN_MTH</p>
+                    <p class="runTimeFields"><strong>Days: </strong>@items.RUN_DAY</p>
+                    <p class="runTimeFields"><strong>Hours: </strong>@items.RUN_HOUR</p>
+                    <p class="runTimeFields"><strong>Minutes: </strong>@items.RUN_MIN</p>
+                }
+                <button type="button" @onclick="@(() => ShowRunTimeParameters(jobSelected))" class="btn btn-warning">Edit Run Time Parameters</button>
+            </div>
+        </div>
+        <div class="first">
+            <label class="indexLabel"><strong>Notify Parameters</strong></label>
+            <div class="notifyParametersForm">
+                @foreach (var item in results.Where(i => i.JOB_NAME == jobSelected))
+                {
+                    <div class="issueDescription">
+                        <label><strong>Issue Description</strong></label>
+                        <InputText id="issueDesc" @bind-Value="item.JOB_HEADER" placeholder="Enter New Issue Description" />
+                    </div>
+                    <div class="sendSlack">
+                        <label><strong>Send Slack</strong></label>
+                        <InputSelect id="sendSlackSelect" @bind-Value="item.SENDSLACK">
+                            @foreach (var items in InitializeData.SendSlacks)
+                            {
+                                <option value="@items.SendSlackName">@items.SendSlackName</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="slackUser">
+                        <label><strong>Slack User</strong></label>
+                        <div class="slackUserText">
+                            <p id="slackUser">@SlackUserString</p>
+                        </div>
+                    </div>
+                    <div class="slackChannel">
+                        <label><strong>Slack Channel</strong></label>
+                        <InputSelect id="sendSlackChannel" @bind-Value="item.SLACK_CHANNEL">
+                            @foreach (var items in InitializeData.SlackChannels)
+                            {
+                                <option value="@items.SlackChannelName">@items.SlackChannelName</option>
+                            }                            
+                        </InputSelect>
+                    </div>
+                    <div class="slackUrl">
+                        <label><strong>Slack URL</strong></label>
+                        @{
+                            switch (item.SLACK_CHANNEL)
+                            {
+                                case "#alerts":
+                                    SlackUrlString = SlackEndpoints.SlackAlerts;
+                                    break;
+                                case "#testspam":
+                                    SlackUrlString = SlackEndpoints.SlackTestSpam;
+                                    break;
+                            }                            
+                        }
+                        <div class="slackUrlTextBox">
+                            <p id="slackUrl">@SlackUrlString</p>
+                        </div>
+                    </div>
+                    <div class="sendMail">
+                        <label><strong>Send Mail</strong></label>
+                        <InputSelect id="sendMailSelect" @bind-Value="item.SENDMAIL">
+                            @foreach (var items in InitializeData.SendMails)
+                            {
+                                <option value="@items.SendMailName">@items.SendMailName</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="mailFrom">
+                        <label><strong>From:</strong></label>
+                        <div class="mailFromText">
+                            <p id="from">@FromMailString</p>
+                        </div>
+                    </div>
+                    <div class="mailTo">
+                        <label><strong>To:</strong></label>
+                        <InputText id="to" @bind-Value="item.MAILTO" placeholder="Enter New Mail To" />
+                    </div>
+                    <div class="subject">
+                        <label id="subjectLabel"><strong>Subject:</strong></label>
+                        <InputText id="subject" @bind-Value="item.EMAIL_SUBJECT" placeholder="Enter New Subject" />
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="second">
+            <label class="indexLabel"><strong>DB Parameters</strong></label>
+            <div class="newDbParametersForm">
+                @foreach (var item in results.Where(i => i.JOB_NAME == jobSelected))
+                {
+                    <div class="dbSchema">
+                        <label id="dbSchemaLabel"><strong>DB Schema</strong></label>
+                        <InputSelect id="dbSchemaSelect" @bind-Value="item.DB_SCHEMA">
+                            @foreach (var items in InitializeData.DbSchemas)
+                            {
+                                <option value="@items.DbSchemaName">@items.DbSchemaName</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="status">
+                        <label id="statusLabel"><strong>Status</strong></label>
+                        <InputSelect id="statusSelect" @bind-Value="item.JOB_ACTIVE">
+                            @foreach (var items in InitializeData.Statuses)
+                            {
+                                <option value="@items.StatusName">@items.StatusName</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="validateButton">
+                        <button type="button" class="btn btn-primary" id="right" @onclick="() => ValidateSql(sqlStatement)">Validate</button>
+                    </div>
+                    <div class="sqlStatement">
+                        <label id="sqlStateLabel"><strong>Sql Statement &nbsp;&nbsp;<font color="red">(Don't end statement with a semi colon)</font></strong></label>
+                        <InputTextArea id="sqlState" @bind-Value="item.JOB_CLOB" placeholder="Enter new Sql statement" />
+                    </div>
+                }
+            </div>
+        </div>
+    </EditForm>
+}
+
+
+@code {
+    void HandleValidSubmit()
+    {
+        Console.WriteLine("OnValidSubmit");
+    }
+}
