@@ -34,13 +34,13 @@ namespace MonitorInterfaceBlazor.Pages
         protected override async Task OnInitializedAsync()
         {
             try
-            {
-                await GetData();
+            {                
                 InitializeData.GetSendSlackDropdown();
                 InitializeData.GetSlackChannelDropdown();
                 InitializeData.GetSendMailDropdown();
                 InitializeData.GetDbSchemaDropdown();
                 InitializeData.GetStatusDropdown();
+                await GetData();
             }
             catch (Exception ex)
             {
